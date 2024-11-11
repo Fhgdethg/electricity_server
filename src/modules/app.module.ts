@@ -1,20 +1,28 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
-import { ChatModule } from '@modules/chat/chat.module';
-import { MqttServerModule } from '@modules/mqtt-server/mqtt-server.module';
+import { TelegramModule } from '@modules/telegram/telegram.module';
+import { MqttServerModule } from '@modules/mqttServer/mqttServer.module';
 import { SequelizeModule } from '@db/sequelize.module';
-import { ChatEventModule } from '@modules/chat-event/chat-event.module';
+import { ChatEventModule } from '@modules/chatEvent/chatEvent.module';
+import { WhatsappModule } from '@modules/whatsapp/whatsapp.module';
+import { ChatModule } from '@modules/chat/chat.module';
+import { ElectricityForecastModule } from '@modules/electricityForecast/electricityForecast.module';
+import { WeatherModule } from '@modules/weather/weather.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env.local', '.env.local', '.env.local.production'],
+      envFilePath: ['.env', '.env.local', '.env.production'],
     }),
     SequelizeModule,
-    ChatModule,
+    TelegramModule,
     MqttServerModule,
+    WhatsappModule,
+    ChatModule,
     ChatEventModule,
+    // WeatherModule,
+    // ElectricityForecastModule,
   ],
   controllers: [],
   providers: [],

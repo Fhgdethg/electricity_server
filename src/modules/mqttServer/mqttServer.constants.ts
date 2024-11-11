@@ -1,7 +1,7 @@
 export const mqttServerRoutes = {
-  connect: 'connect' as const,
-  message: 'message' as const,
-  error: 'error' as const,
+  connect: 'connect',
+  message: 'message',
+  error: 'error',
 
   serverResFirstOn: 'server/res/first-on',
 
@@ -13,4 +13,4 @@ export const mqttServerRoutes = {
   serverReqSchedule: 'server/req/schedule',
 
   serverResTest: 'server/res/test',
-};
+} as const;

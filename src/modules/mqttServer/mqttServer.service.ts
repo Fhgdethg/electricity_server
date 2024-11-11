@@ -2,14 +2,15 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import mqtt, { MqttClient } from 'mqtt';
 
-import { ChatService } from '@modules/chat/chat.service';
+import { TelegramService } from '@modules/telegram/telegram.service';
 
-import { mqttServerRoutes } from '@constants/mqttServerRoutes';
+import { mqttServerRoutes } from '@modules/mqttServer/mqttServer.constants';
 
 import { delay, getCurrentDateAsTimeString } from '@helpers/time';
 
-import { TMqttServerMode } from '@modules/mqtt-server/mqtt-server.types';
-import { ChatEventService } from '@modules/chat-event/chat-event.service';
+import { TMqttServerMode } from '@modules/mqttServer/mqttServer.types';
+import { ChatEventService } from '@modules/chatEvent/chatEvent.service';
+import { ChatService } from '@modules/chat/chat.service';
 
 @Injectable()
 export class MqttServerService {
@@ -29,8 +30,10 @@ export class MqttServerService {
   private countOfTestMqttServerExtraRes = 0;
 
   constructor(
+    @Inject(forwardRef(() => TelegramService))
+    private readonly telegramChatService: TelegramService,
     @Inject(forwardRef(() => ChatService))
-    private readonly telegramChatService: ChatService,
+    private readonly chatService: ChatService,
     @Inject(ChatEventService)
     private readonly chatEventService: ChatEventService,
     private readonly configService: ConfigService,
@@ -92,12 +95,12 @@ export class MqttServerService {
     this.countOfTestMqttServerExtraRes = 0;
   }
 
-  testMqttServerIntervalCallback() {
-    console.log(
-      'callback',
-      this.previousIDOfTestMqttServerRes,
-      this.IDOfTestMqttServerRes,
-    );
+  async testMqttServerIntervalCallback() {
+    // console.log(
+    //   'callback',
+    //   this.previousIDOfTestMqttServerRes,
+    //   this.IDOfTestMqttServerRes,
+    // );
     if (
       this.previousIDOfTestMqttServerRes !== this.IDOfTestMqttServerRes &&
       this.countOfTestMqttServerExtraRes <= 2
@@ -108,19 +111,20 @@ export class MqttServerService {
       this.previousIDOfTestMqttServerRes === this.IDOfTestMqttServerRes &&
       this.countOfTestMqttServerExtraRes > 2
     ) {
-      this.telegramChatService.sendMessageToChat(
+      this.chatService.sendMsgToSomeMessengers(
+        this.chatService.messengers,
         `Електрика була вмикнута о ${getCurrentDateAsTimeString()}`,
-        this.telegramChatService.getCurrentActiveChatID(),
       );
+      await this.chatEventService.addChatEvent('Електрика була вмикнута');
       this.stopTestMqttServerInterval();
     } else if (
       this.previousIDOfTestMqttServerRes === this.IDOfTestMqttServerRes &&
       this.countOfTestMqttServerExtraRes <= 2
     ) {
       this.countOfTestMqttServerExtraRes++;
-      this.telegramChatService.sendMessageToChat(
+      this.chatService.sendMsgToSomeMessengers(
+        this.chatService.messengers,
         `Сервер не відповів ${this.countOfTestMqttServerExtraRes} раз`,
-        this.telegramChatService.getCurrentActiveChatID(),
       );
     }
   }
@@ -139,22 +143,24 @@ export class MqttServerService {
 
   async router(topic: string, resData: string) {
     if (topic === mqttServerRoutes.serverResFirstOn) {
-      this.telegramChatService.sendMessageToChat(
+      this.chatService.sendMsgToSomeMessengers(
+        this.chatService.messengers,
         `Електрику було вимкнено о ${getCurrentDateAsTimeString()}`,
-        this.telegramChatService.getCurrentActiveChatID(),
       );
       await this.chatEventService.addChatEvent('Електрику вимкнено');
-    } else if (topic === mqttServerRoutes.serverResOn)
-      this.telegramChatService.sendMessageToChat(
+    } else if (topic === mqttServerRoutes.serverResOn) {
+      this.chatService.sendMsgToSomeMessengers(
+        this.chatService.messengers,
         'Електрика була вмикнута',
-        resData,
       );
-    else if (topic === mqttServerRoutes.serverResOff)
-      this.telegramChatService.sendMessageToChat(
+      await this.chatEventService.addChatEvent('Електрика була вмикнута');
+    } else if (topic === mqttServerRoutes.serverResOff) {
+      this.chatService.sendMsgToSomeMessengers(
+        this.chatService.messengers,
         'Електрику було вимкнено',
-        resData,
       );
-    else if (topic === mqttServerRoutes.serverResTest)
+      await this.chatEventService.addChatEvent('Електрика була вмикнута');
+    } else if (topic === mqttServerRoutes.serverResTest)
       this.mqttServerTestResHandler(Number(resData));
   }
 

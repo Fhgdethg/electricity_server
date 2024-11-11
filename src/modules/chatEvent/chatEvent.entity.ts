@@ -7,7 +7,7 @@ import {
 } from 'sequelize-typescript';
 import { DataTypes } from 'sequelize';
 
-@Table
+@Table({ timestamps: false })
 export class ChatEvent extends Model {
   @PrimaryKey
   @AutoIncrement

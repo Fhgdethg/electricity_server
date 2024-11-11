@@ -13,7 +13,7 @@ services:
       MYSQL_USER: '${MYSQL_USER}'
       MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
     volumes:
-      - ./db-data:/var/lib/mysql
+      - ./dbData:/var/lib/mysql
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache
     env_file:

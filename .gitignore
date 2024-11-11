@@ -1,9 +1,11 @@
 # compiled output
 /dist
 /node_modules
-/db-data
+/dbData
 # Logs
 logs
+.wwebjs_auth
+.wwebjs_cache
 *.log
 npm-debug.log*
 pnpm-debug.log*

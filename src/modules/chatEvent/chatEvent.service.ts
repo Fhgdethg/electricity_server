@@ -3,10 +3,8 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 import { Repository } from 'sequelize-typescript';
 
-import { ChatEvent } from '@modules/chat-event/chat-event.entity';
-
-import { IChatEvent } from '@modules/chat-event/chat-event.types';
-import { getCurrentDateAsTimeString } from '@helpers/time';
+import { ChatEvent } from '@modules/chatEvent/chatEvent.entity';
+import { getDateAsTimeString } from '@helpers/time';
 
 @Injectable()
 export class ChatEventService {
@@ -36,7 +34,7 @@ export class ChatEventService {
     return events || [];
   }
 
-  parseEventsToString(events: IChatEvent[]) {
+  parseEventsToString(events: ChatEvent[]) {
     let historyStr: string = '';
 
     events.forEach(
@@ -44,11 +42,21 @@ export class ChatEventService {
         (historyStr += `${history.action} о ${history.eventDate}\n\n`),
     );
 
-    return historyStr || 'Вчора не було подій';
+    return historyStr || 'Подій не було';
   }
 
   async getParsedHistoryStr() {
-    const events = await this.getYesterdayEvents();
+    const events: ChatEvent[] = await this.chatEventRepository.findAll();
+    const modifyEvents = events.map((event) => ({
+      ...event.dataValues,
+      eventDate: getDateAsTimeString(event.eventDate),
+    }));
+
+    return this.parseEventsToString(modifyEvents);
+  }
+
+  async getParsedYesterdayHistoryStr() {
+    const events: ChatEvent[] = await this.getYesterdayEvents();
     return this.parseEventsToString(events);
   }
 
@@ -56,6 +64,12 @@ export class ChatEventService {
     await this.chatEventRepository.create({
       action,
       eventDate: new Date(),
+    });
+  }
+
+  async clearChatEvents() {
+    await this.chatEventRepository.destroy({
+      truncate: true,
     });
   }
 }
